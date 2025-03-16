@@ -1,9 +1,9 @@
 import os
 from pymongo import MongoClient
 from dotenv import load_dotenv
-from groq import Groq
 import markdown2 as m2
 from markdownify import markdownify as md
+from openai import OpenAI
 load_dotenv()
 try:
     client = MongoClient(os.getenv("MONGO_URL"))
@@ -54,19 +54,14 @@ def get_response(input):
         else:
             info = {"role": single_message['sender'], "content": md(single_message['content'])}
         messages.append(info)
-    client = Groq(api_key=os.getenv("API_KEY_LLM"))
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+    client = OpenAI(api_key=os.getenv("API_KEY_LLM"))
+    completion = client.chat.completions.create(
+        model="gpt-4o",
         messages=[
             *messages, 
             {"role": "user", "content": input}
         ],
-        temperature=1,
-        max_tokens=1024,
-        top_p=1,
-        stream=False,
-        stop=None,
     )
-    return m2.markdown(response.choices[0].message.content)
+    return m2.markdown(completion.choices[0].message.content)
 
 
